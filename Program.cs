@@ -1,17 +1,23 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿var rsaEncryptor = new RSAEncryptor();
+var keyPair = rsaEncryptor.GenerateKeys();
+Console.WriteLine(keyPair);
 
-var hashFunction = new CRC32Hash();
-var builder = new BlockchainBuilder(hashFunction, null);
-var chain = new Blockchain(hashFunction);
-foreach (var i in Enumerable.Range(0, 10))
-{
-    chain.AddBlock(builder.BuildBlock(i.ToString()));
-}
+var someData = "Hello World";
+var signedBlock = rsaEncryptor.Sign(keyPair.PrivateKey, someData);
+if (rsaEncryptor.VerifySign(keyPair.PublicKey, someData, signedBlock))
+    Console.WriteLine("Signed correctly");
+else
+    Console.Error.WriteLine("Signed incorrectly");
 
-var list = chain.ToList();
-//list[3] = list[3] with { Data = "__" };
-//list[3] = list[3] with { ParentHash = list[4].ParentHash };
-//list[3] = list[3] with { Hash = list[5].Hash };
-var newChain = new Blockchain(hashFunction);
-foreach(var item in list)
-    newChain.AddBlock(item);
+if (rsaEncryptor.VerifySign(keyPair.PublicKey, someData, signedBlock.Replace('A', 'B')))
+    Console.WriteLine("Signed correctly");
+else
+    Console.Error.WriteLine("Signed incorrectly");
+
+
+var anotherPair = rsaEncryptor.GenerateKeys();
+if (rsaEncryptor.VerifySign(anotherPair.PublicKey, someData, signedBlock))
+    Console.WriteLine("Signed correctly");
+else
+    Console.Error.WriteLine("Signed incorrectly");
+

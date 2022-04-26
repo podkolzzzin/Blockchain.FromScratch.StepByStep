@@ -1,6 +1,11 @@
 ﻿using System.Collections;
 
-class Blockchain : IEnumerable<BlockchainBlock>
+interface IBlockchain : IEnumerable<BlockchainBlock>
+{
+    void AddBlock(BlockchainBlock data);
+}
+
+class Blockchain : IBlockchain
 {
     private readonly List<BlockchainBlock> _blocks = new List<BlockchainBlock>();
     private readonly IHashFunction _hashFunction;
