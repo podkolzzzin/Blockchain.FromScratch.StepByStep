@@ -1,10 +1,13 @@
 using System.Collections;
 using System.Text.Json;
+using Sample1;
+
 record struct Block<T>(string Hash, string ParentHash, string Raw, T Data);
 
 interface ITypedBlockchain<T> : IEnumerable<Block<T>>
 {
-    void AddBlock(T data);
+    Block<T> BuildBlock(T data);
+    void AcceptBlock(Block<T> typedBlock);
 }
 
 interface IRule<T>
@@ -25,16 +28,22 @@ class TypedBlockchain<T> : ITypedBlockchain<T>
         _businessRules = businessRules;
     }
 
-    public void AddBlock(T data)
+    public Block<T> BuildBlock(T data)
     {
         var dataStr = JsonSerializer.Serialize(data);
         var block = _builder.BuildBlock(dataStr);
         var typedBlock = new Block<T>(block.Hash, block.ParentHash, dataStr, data);
+        return typedBlock;
+    }
+
+    public void AcceptBlock(Block<T> typedBlock)
+    {
         foreach (var rule in _businessRules)
         {
             rule.Execute(this, typedBlock);
         }
-        
+
+        var block = _builder.BuildBlock(typedBlock.Raw);
         _blockchain.AddBlock(block);
         _builder.AcceptBlock(block);
     }

@@ -11,7 +11,8 @@ class PopulationCensusApp
 
     public void AddPerson(Person person)
     {
-        _registry.AddBlock(person);
+        var block = _registry.BuildBlock(person);
+        _registry.AcceptBlock(block);
     }
 
     public void PrintAll()

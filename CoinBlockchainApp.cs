@@ -2,7 +2,7 @@ using System.Text.Json;
 
 record Transaction(string From, string To, long Amount);
 
-record TransactionBlock(Transaction Data, string Sign) : ISigned<Transaction>
+record TransactionBlock(Transaction Data, string Sign, int Nonce) : ISigned<Transaction>, IProofOfWork
 {
     public string PublicKey => Data.From;
 }
@@ -33,22 +33,26 @@ class CoinBlockchainApp
 {
     private readonly ITypedBlockchain<TransactionBlock> _blockchain;
     private readonly IEncryptor _encryptor;
+    private readonly IProofOfWorkRule<TransactionBlock> _proofOfWorkRule;
 
     public CoinBlockchainApp()
     {
         var hashFunction = new CRC32Hash();
         var lowLevelBlockchain = new Blockchain(hashFunction);
+        _proofOfWorkRule = new ProofOfWorkRule<TransactionBlock>();
         _encryptor = new RSAEncryptor();
         _blockchain = new TypedBlockchain<TransactionBlock>(lowLevelBlockchain, hashFunction,
             new SignCheckRule<TransactionBlock, Transaction>(_encryptor),
-            new AmountIsAvailableRule());
+            new AmountIsAvailableRule(),
+            _proofOfWorkRule);
     }
 
     public KeyPair GenerateKeys() => _encryptor.GenerateKeys();
 
     public void AcceptTransaction(TransactionBlock transactionBlock)
     {
-        _blockchain.AddBlock(transactionBlock);
+        var block = _blockchain.BuildBlock(transactionBlock);
+        _blockchain.AcceptBlock(block);
     }
 
     public void PerformTransaction(KeyPair fromKeys, string to, long amount)
@@ -56,7 +60,16 @@ class CoinBlockchainApp
         var transaction = new Transaction(fromKeys.PublicKey, to, amount);
         var transactionString = JsonSerializer.Serialize(transaction);
         var sign = _encryptor.Sign(transactionString, fromKeys.PrivateKey);
-        var block = new TransactionBlock(transaction, sign);
-        AcceptTransaction(block);
+        int height = _blockchain.Count();
+        var transactionBlock = new TransactionBlock(transaction, sign, 0);
+        for (int i = 0; i < int.MaxValue; i++)
+        {
+            transactionBlock = transactionBlock with { Nonce = i };
+            var block = _blockchain.BuildBlock(transactionBlock);
+            if (_proofOfWorkRule.Execute(height, block.Hash))
+                break;
+        }
+
+        AcceptTransaction(transactionBlock);
     }
 }
