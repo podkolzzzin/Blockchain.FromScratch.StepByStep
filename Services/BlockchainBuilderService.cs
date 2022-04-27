@@ -1,9 +1,9 @@
-﻿class BlockchainBuilder
+﻿class BlockchainBuilderService : IBlockchainBuilderService
 {
     private readonly IHashFunction _hashFunction;
     private string? _tail = null;
 
-    public BlockchainBuilder(IHashFunction hashFunction, string? tail)
+    public BlockchainBuilderService(IHashFunction hashFunction, string? tail)
     {
         _hashFunction = hashFunction;
         _tail = tail;

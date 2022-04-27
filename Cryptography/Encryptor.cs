@@ -2,15 +2,6 @@
 using System.Text;
 using System;
 
-public record KeyPair(string PublicKey, string PrivateKey);
-
-public interface IEncryptor
-{
-    KeyPair GenerateKeys();
-    string Sign(string data, string privateKey);
-    bool VerifySign(string publicKey, string data, string sign);
-}
-
 public class RSAEncryptor : IEncryptor
 {
     public KeyPair GenerateKeys()

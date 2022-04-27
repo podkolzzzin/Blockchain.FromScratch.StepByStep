@@ -2,11 +2,6 @@
 using System.Text;
 using Force.Crc32;
 
-public interface IHashFunction
-{
-    public string GetHash(string data);
-}
-
 public class SHA256Hash : IHashFunction
 {
     public string GetHash(string data)

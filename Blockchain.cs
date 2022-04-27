@@ -1,9 +1,6 @@
 ﻿using System.Collections;
 
-interface IBlockchain : IEnumerable<BlockchainBlock>
-{
-    void AddBlock(BlockchainBlock data);
-}
+
 
 class Blockchain : IBlockchain
 {

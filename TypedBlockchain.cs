@@ -17,20 +17,20 @@ interface IRule<T>
 class TypedBlockchain<T> : ITypedBlockchain<T>
 {
     private readonly IBlockchain _blockchain;
-    private readonly BlockchainBuilder _builder;
+    private readonly IBlockchainBuilderService _builderService;
     private readonly IRule<T>[] _businessRules;
 
     public TypedBlockchain(IBlockchain blockchain, IHashFunction hashFunction, params IRule<T>[] businessRules)
     {
         _blockchain = blockchain;
-        _builder = new BlockchainBuilder(hashFunction, _blockchain.LastOrDefault()?.Hash);
+        _builderService = new BlockchainBuilderService(hashFunction, _blockchain.LastOrDefault()?.Hash);
         _businessRules = businessRules;
     }
 
     public Block<T> BuildBlock(T data)
     {
         var dataStr = JsonSerializer.Serialize(data);
-        var block = _builder.BuildBlock(dataStr);
+        var block = _builderService.BuildBlock(dataStr);
         var typedBlock = new Block<T>(block.Hash, block.ParentHash, dataStr, data);
         return typedBlock;
     }
@@ -42,9 +42,9 @@ class TypedBlockchain<T> : ITypedBlockchain<T>
             rule.Execute(this, typedBlock);
         }
 
-        var block = _builder.BuildBlock(typedBlock.Raw);
+        var block = _builderService.BuildBlock(typedBlock.Raw);
         _blockchain.AddBlock(block);
-        _builder.AcceptBlock(block);
+        _builderService.AcceptBlock(block);
     }
 
     public IEnumerator<Block<T>> GetEnumerator()
