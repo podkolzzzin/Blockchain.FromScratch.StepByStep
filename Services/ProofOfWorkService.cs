@@ -2,9 +2,9 @@ class ProofOfWorkService<T> : IProofOfWorkService<T> where T : IProofOfWork
 {
     private readonly ITypedBlockchain<T> _blockchain;
     private readonly Func<T, T> _nextVariant;
-    private readonly IProofOfWorkRule<TransactionBlock> _proofOfWorkRule;
+    private readonly IProofOfWorkRule<T> _proofOfWorkRule;
     
-    public ProofOfWorkService(ITypedBlockchain<T> blockchain, Func<T, T> nextVariant, IProofOfWorkRule<TransactionBlock> proofOfWorkRule)
+    public ProofOfWorkService(ITypedBlockchain<T> blockchain, Func<T, T> nextVariant, IProofOfWorkRule<T> proofOfWorkRule)
     {
         _blockchain = blockchain;
         _nextVariant = nextVariant;
