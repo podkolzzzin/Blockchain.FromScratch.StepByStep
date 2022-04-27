@@ -22,3 +22,12 @@ class PopulationCensusApp
         }
     }
 }
+
+class DuplicationRule : IRule<Person>
+{
+    public void Execute(IEnumerable<Block<Person>> builtBlocks, Person newData)
+    {
+        if (builtBlocks.Any(x => x.Data.Equals(newData)))
+            throw new ApplicationException($"Person {newData} is already presented in blockchain.");
+    }
+}

@@ -7,6 +7,11 @@ interface ITypedBlockchain<T> : IEnumerable<Block<T>>
     void AddBlock(T data);
 }
 
+interface IRule<T>
+{
+    void Execute(IEnumerable<Block<T>> builtBlocks, T newData);
+}
+
 class TypedBlockchain<T> : ITypedBlockchain<T>
 {
     private readonly IBlockchain _blockchain;
