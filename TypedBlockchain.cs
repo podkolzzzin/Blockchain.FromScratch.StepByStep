@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Text.Json;
-using Sample1;
 
 record struct Block<T>(string Hash, string ParentHash, string Raw, T Data);
 

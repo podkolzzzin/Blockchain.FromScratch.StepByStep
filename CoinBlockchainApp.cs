@@ -7,6 +7,33 @@ record TransactionBlock(Transaction Data, string Sign, int Nonce) : ISigned<Tran
     public string PublicKey => Data.From;
 }
 
+class ProofOfWorkService<T> where T : IProofOfWork
+{
+    private readonly ITypedBlockchain<T> _blockchain;
+    private readonly Func<T, T> _nextVariant;
+    private readonly IProofOfWorkRule<TransactionBlock> _proofOfWorkRule;
+    
+    public ProofOfWorkService(ITypedBlockchain<T> blockchain, Func<T, T> nextVariant, IProofOfWorkRule<TransactionBlock> proofOfWorkRule)
+    {
+        _blockchain = blockchain;
+        _nextVariant = nextVariant;
+        _proofOfWorkRule = proofOfWorkRule;
+    }
+
+    public T Proof(int height, T block)
+    {
+        for (int i = 0; i < int.MaxValue; i++)
+        {
+            var lowLevelBlock = _blockchain.BuildBlock(block);
+            if (_proofOfWorkRule.Execute(height, lowLevelBlock.Hash))
+                return block;
+            block = _nextVariant(block);
+        }
+
+        throw new ApplicationException("Block is not possible to build. Try again after some blocks will be put.");
+    }
+}
+
 class AmountIsAvailableRule : IRule<TransactionBlock>
 {
     public void Execute(IEnumerable<Block<TransactionBlock>> builtBlocks, Block<TransactionBlock> newData)
@@ -34,6 +61,7 @@ class CoinBlockchainApp
     private readonly ITypedBlockchain<TransactionBlock> _blockchain;
     private readonly IEncryptor _encryptor;
     private readonly IProofOfWorkRule<TransactionBlock> _proofOfWorkRule;
+    private readonly ProofOfWorkService<TransactionBlock> _proofOfWorkService;
 
     public CoinBlockchainApp()
     {
@@ -45,6 +73,8 @@ class CoinBlockchainApp
             new SignCheckRule<TransactionBlock, Transaction>(_encryptor),
             new AmountIsAvailableRule(),
             _proofOfWorkRule);
+        _proofOfWorkService =
+            new ProofOfWorkService<TransactionBlock>(_blockchain, x => x with { Nonce = x.Nonce + 1 }, _proofOfWorkRule);
     }
 
     public KeyPair GenerateKeys() => _encryptor.GenerateKeys();
@@ -61,14 +91,7 @@ class CoinBlockchainApp
         var transactionString = JsonSerializer.Serialize(transaction);
         var sign = _encryptor.Sign(transactionString, fromKeys.PrivateKey);
         int height = _blockchain.Count();
-        var transactionBlock = new TransactionBlock(transaction, sign, 0);
-        for (int i = 0; i < int.MaxValue; i++)
-        {
-            transactionBlock = transactionBlock with { Nonce = i };
-            var block = _blockchain.BuildBlock(transactionBlock);
-            if (_proofOfWorkRule.Execute(height, block.Hash))
-                break;
-        }
+        var transactionBlock = _proofOfWorkService.Proof(height, new TransactionBlock(transaction, sign, 0));
 
         AcceptTransaction(transactionBlock);
     }
