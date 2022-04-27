@@ -9,10 +9,11 @@ record TransactionBlock(Transaction Data, string Sign) : ISigned<Transaction>
 
 class AmountIsAvailableRule : IRule<TransactionBlock>
 {
-    public void Execute(IEnumerable<Block<TransactionBlock>> builtBlocks, TransactionBlock newData)
+    public void Execute(IEnumerable<Block<TransactionBlock>> builtBlocks, Block<TransactionBlock> newData)
     {
         long balance = 100;
-        var from = newData.Data.From;
+        var transaction = newData.Data;
+        var from = transaction.Data.From;
         foreach (var block in builtBlocks)
         {
             var signedTransaction = block.Data;
@@ -22,9 +23,9 @@ class AmountIsAvailableRule : IRule<TransactionBlock>
                 balance += signedTransaction.Data.Amount;
         }
 
-        if (balance < newData.Data.Amount)
+        if (balance < transaction.Data.Amount)
             throw new ApplicationException(
-                $"User {newData.PublicKey} does not have {newData.Data.Amount} coins. It has only {balance} coins.");
+                $"User {transaction.PublicKey} does not have {transaction.Data.Amount} coins. It has only {balance} coins.");
     }
 }
 

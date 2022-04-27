@@ -16,10 +16,11 @@ class SignCheckRule<TBlockData, TSignedData> : IRule<TBlockData> where TBlockDat
         _encryptor = encryptor;
     }
     
-    public void Execute(IEnumerable<Block<TBlockData>> builtBlocks, TBlockData newData)
+    public void Execute(IEnumerable<Block<TBlockData>> builtBlocks, Block<TBlockData> newData)
     {
+        var signed = newData.Data;
         var dataThatShouldBeSigned = JsonSerializer.Serialize(newData.Data);
-        if (!_encryptor.VerifySign(newData.PublicKey, dataThatShouldBeSigned, newData.Sign))
+        if (!_encryptor.VerifySign(signed.PublicKey, dataThatShouldBeSigned, signed.Sign))
             throw new ApplicationException("Block sign is incorrect.");
     }
 }

@@ -9,7 +9,7 @@ interface ITypedBlockchain<T> : IEnumerable<Block<T>>
 
 interface IRule<T>
 {
-    void Execute(IEnumerable<Block<T>> builtBlocks, T newData);
+    void Execute(IEnumerable<Block<T>> builtBlocks, Block<T> newData);
 }
 
 class TypedBlockchain<T> : ITypedBlockchain<T>
@@ -27,14 +27,16 @@ class TypedBlockchain<T> : ITypedBlockchain<T>
 
     public void AddBlock(T data)
     {
-        foreach (var rule in _businessRules)
-        {
-            rule.Execute(this, data);
-        }
-        
         var dataStr = JsonSerializer.Serialize(data);
         var block = _builder.BuildBlock(dataStr);
+        var typedBlock = new Block<T>(block.Hash, block.ParentHash, dataStr, data);
+        foreach (var rule in _businessRules)
+        {
+            rule.Execute(this, typedBlock);
+        }
+        
         _blockchain.AddBlock(block);
+        _builder.AcceptBlock(block);
     }
 
     public IEnumerator<Block<T>> GetEnumerator()
