@@ -24,7 +24,7 @@ public class RSAEncryptor : IEncryptor
         return new KeyPair(publicKey, privateKey);
     }
 
-    public string Sign(string privateKey, string data)
+    public string Sign(string data, string privateKey)
     {
         using var provider = GetCryptoProvider(privateKey);
         var bytes = Encoding.UTF8.GetBytes(data);

@@ -1,19 +1,12 @@
 ﻿using System.Text.Json;
 
-var hashFunction = new CRC32Hash();
-var app = new PopulationCensusApp(
-    new TypedBlockchain<Person>(
-        new Blockchain(hashFunction),
-        hashFunction,
-        new DuplicationRule()
-        )
-    );
+var coinApp = new CoinBlockchainApp();
+var user1 = coinApp.GenerateKeys();
+var user2 = coinApp.GenerateKeys();
+coinApp.PerformTransaction(user1, user2.PublicKey, 50);
+coinApp.PerformTransaction(user2, user1.PublicKey, 105);
+coinApp.PerformTransaction(user2, user1.PublicKey, 50);
 
-app.AddPerson(new Person("Iggy", "Pop"));
-app.AddPerson(new Person("Mick", "Jagger"));
-app.AddPerson(new Person("Iggy", "Pop"));
-
-app.PrintAll();
 
 record Transaction(string From, string To, long Amount);
 
@@ -26,7 +19,7 @@ class AmountIsAvailableRule : IRule<TransactionBlock>
 {
     public void Execute(IEnumerable<Block<TransactionBlock>> builtBlocks, TransactionBlock newData)
     {
-        long balance = 0;
+        long balance = 100;
         var from = newData.Data.From;
         foreach (var block in builtBlocks)
         {
@@ -57,6 +50,8 @@ class CoinBlockchainApp
             new SignCheckRule<TransactionBlock, Transaction>(_encryptor),
             new AmountIsAvailableRule());
     }
+
+    public KeyPair GenerateKeys() => _encryptor.GenerateKeys();
 
     public void AcceptTransaction(TransactionBlock transactionBlock)
     {
