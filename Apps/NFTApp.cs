@@ -67,7 +67,7 @@ class OwningRule : IRule<NFTBlock>
                 }
             }
 
-            throw new ApplicationException("You are trying- to transfer the work of art that has not been yet registered");
+            throw new ApplicationException("You are trying- to transfer the work of art that has not been yet registered.");
         }
     }
 }
