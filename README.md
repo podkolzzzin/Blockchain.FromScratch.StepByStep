@@ -1,4 +1,7 @@
-﻿#Encoding
+﻿#This is code for the stream. 
+You can watch it live [here](https://youtu.be/SdJ5Hj4m6j8).
+
+#Encoding
 `f(x) = y, g(y) = x`
 #Hash Function
 f(data) = code
